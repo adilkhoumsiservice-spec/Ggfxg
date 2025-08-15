@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Analyzer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px 25px;
+            background-color: #4a90e2;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        #results {
+            margin-top: 30px;
+            text-align: left;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        #results h2 {
+            color: #4a90e2;
+        }
+        #results p {
+            margin: 5px 0;
+            color: #555;
+        }
+        .loading {
+            font-style: italic;
+            color: #888;
+        }
+        .error {
+            color: #d9534f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Website Analyzer</h1>
+        <p>أدخل اسم نطاق للحصول على تقرير تحليلي.</p>
+        <input type="text" id="domainInput" placeholder="مثال: example.com">
+        <button onclick="analyzeWebsite()">تحليل</button>
+        <div id="results">
+            </div>
+    </div>
+
+    <script>
+        async function analyzeWebsite() {
+            const domain = document.getElementById('domainInput').value;
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p class="loading">جارٍ التحليل...</p>';
+
+            if (!domain) {
+                resultsDiv.innerHTML = '<p class="error">الرجاء إدخال اسم نطاق.</p>';
+                return;
+            }
+
+            try {
+                // استخدام المسار النسبي /analyze لأن الخادم يعمل في نفس المكان
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ domain: domain })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const report = data.report;
+                    resultsDiv.innerHTML = `
+                        <h2>تقرير التحليل لـ ${data.domain}</h2>
+                        <p><strong>التكلفة التقديرية للنقرة (CPC):</strong> $${report.estimated_cpc}</p>
+                        <p><strong>حركة المرور التقديرية:</strong> ${report.estimated_traffic.toLocaleString()} زائر/شهر</p>
+                        <p><strong>الكلمات المفتاحية العليا:</strong> ${report.keywords.join(', ')}</p>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">خطأ: ${data.error}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">حدث خطأ: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
